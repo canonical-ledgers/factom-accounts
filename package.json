@@ -1,0 +1,19 @@
+{
+  "name": "accountsjs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "accounts.js",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "csvtojson": "^1.1.9",
+    "inquirer": "^5.2.0",
+    "request": "^2.85.0",
+    "yargs": "^11.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
