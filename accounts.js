@@ -48,7 +48,7 @@ const argv = yargs
         },
         secret: {
             demand: false,
-            alias: 's',
+            alias: 'S',
             describe: 'Your bitcoin.tax secret'
         },
         type: {
@@ -106,7 +106,11 @@ ${receivedArr[i].fiatPrice}, ${receivedArr[i].fiatValue}, ${receivedArr[i].curre
         }
 
         if (argv.key !== undefined && receivedArr[0] !== undefined) {
-            await postDataToBitcoinTax(receivedArr)
+            await apiCallWithRetry('postBitcoinTax', receivedArr)
+            const bitcoinTaxLocalData = './bitcoin-tax.json'
+            // if (fs.existsSync(bitcoinTaxLocalData) === false) {
+            //     const bitcoinTaxRemoteData = await axios.get
+            // }
         }
 
     } catch(err) {
@@ -118,32 +122,7 @@ ${receivedArr[i].fiatPrice}, ${receivedArr[i].fiatValue}, ${receivedArr[i].curre
 
 const postDataToBitcoinTax = async(receivedArr) => {
     try {
-        const bitcoinTaxArr = []
-        for (let i = 0; i < receivedArr.length; i++) {
-            bitcoinTaxArr.push({
-                date: receivedArr[i].date,
-                action: argv.type === undefined ? 'Income' : argv.type,
-                symbol: 'FCT',
-                currency: `${argv.currency}`,
-                volume: receivedArr[i].fctReceived,
-                price: receivedArr[i].fiatPrice,
-                txhash: receivedArr[i].txid,
-                recipient: argv.address
-            })
-        }
 
-        const options = {
-            method: 'POST',
-            url: 'https://api.bitcoin.tax/v1/transactions',
-            data: bitcoinTaxArr,
-            headers: {
-                "User-Agent": 'axios/0.18.0',
-                "X-APIKEY": `${argv.key}`,
-                "X-APISECRET": `${argv.secret}`
-            },
-            json: true
-        }
-        await axios(options)
     } catch(err) {
         console.log(err)
     }
@@ -174,7 +153,7 @@ async function apiCallWithRetry(type, objParam) {
                 }
                 const tx = await axios.post(`${url}`, body)
                 return tx
-            } else if (type === 'hour' || 'minute') {
+            } else if (type === 'hour' || type === 'minute') {
                 const exchangeBtc = argv.btcex === undefined ? 'CCCAGG' : argv.btcex
                 const exchangeFiat =  argv.fiatex === undefined ? 'CCCAGG' : argv.fiatex
                 const histBtc = await axios.get(`https://min-api.cryptocompare.com/data/histo${type}?fsym=FCT&tsym=BTC&limit=0&aggregate=1&toTs=${objParam}&e=${exchangeBtc}`)
@@ -183,12 +162,40 @@ async function apiCallWithRetry(type, objParam) {
                 const avgFiatPrice = (histFiat.data.Data[1].high + histFiat.data.Data[1].low + histFiat.data.Data[1].open + histFiat.data.Data[1].close) / 4
                 const priceEstimate = avgFiatPrice * avgBtcPrice
                 return priceEstimate
+            } else if (type === 'postBitcoinTax') {
+                const bitcoinTaxArr = []
+                for (let i = 0; i < objParam.length; i++) {
+                    bitcoinTaxArr.push({
+                        date: objParam[i].date,
+                        action: argv.type === undefined ? 'Income' : argv.type,
+                        symbol: 'FCT',
+                        currency: `${argv.currency}`,
+                        volume: objParam[i].fctReceived,
+                        price: objParam[i].fiatPrice,
+                        txhash: objParam[i].txid,
+                        recipient: argv.address
+                    })
+                }
+
+                const options = {
+                    method: 'POST',
+                    url: 'https://api.bitcoin.tax/v1/transactions',
+                    data: bitcoinTaxArr,
+                    headers: {
+                        "User-Agent": 'axios/0.18.0',
+                        "X-APIKEY": `${argv.key}`,
+                        "X-APISECRET": `${argv.secret}`
+                    },
+                    json: true
+                }
+                debugger;
+                await axios(options)
             }
         } catch (err) {
             const timeout = Math.pow(2, i)
             console.log('Waiting', timeout, 'ms')
             await wait(timeout)
-            console.log('Retrying', err, i)
+            console.log('Retrying', err.message, i)
         }
     }
 }
