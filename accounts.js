@@ -107,10 +107,6 @@ ${receivedArr[i].fiatPrice}, ${receivedArr[i].fiatValue}, ${receivedArr[i].curre
 
         if (argv.key !== undefined && receivedArr[0] !== undefined) {
             await apiCallWithRetry('postBitcoinTax', receivedArr)
-            const bitcoinTaxLocalData = './bitcoin-tax.json'
-            // if (fs.existsSync(bitcoinTaxLocalData) === false) {
-            //     const bitcoinTaxRemoteData = await axios.get
-            // }
         }
 
     } catch(err) {
