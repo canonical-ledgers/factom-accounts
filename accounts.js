@@ -93,7 +93,9 @@ const checkForNewTx = async(previouslyRecordedTransactions) => {
         }
 
         receivedArr.reverse()
-        receivedArr[0] === undefined ? 'do nothing' : console.log(`Found new transaction(s): ${JSON.stringify(receivedArr)}`)
+        if (receivedArr[0] !== undefined) {
+            console.log(`Found new transaction(s): \n${JSON.stringify(receivedArr)}`
+        }
 
         for (let i = 0; i < receivedArr.length; i++) {
             const csvData = `${receivedArr[i].date.slice(0, 10)}, ${argv.address}, ${receivedArr[i].txid}, \
