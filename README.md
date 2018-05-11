@@ -2,7 +2,7 @@
 
 This tool is built for Factom authority node operators and grant recipients to enable them to record the value of their payouts in a fiat currency of their choice. It achieves this by watching a specified address on the Factom blockchain, then outputting a CSV with transaction and price data. It can also be connected to the bitcoin.tax API to post transaction data directly into your bitcoin.tax account.
 
-The tool is intended to be left operating so it can check for new transactions at regular intervals. However, it is also capable of filling in historic price data for all transactions received at an address. For transactions less than one week old, it is able to fetch historical price data per minute. Transactions older than one week can only be matched to hourly price data, so is naturally less accurate.
+The tool is intended to be left operating so it can check for new transactions at intervals of one minute. However, it is also capable of filling in historic price data for all transactions received at an address. For transactions less than one week old, it is able to fetch historical price data per minute. Transactions older than one week can only be matched to hourly price data.
 
 
 ## Installing NodeJS
