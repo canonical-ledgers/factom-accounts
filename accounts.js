@@ -116,15 +116,6 @@ ${receivedArr[i].fiatPrice}, ${receivedArr[i].fiatValue}, ${receivedArr[i].curre
     }
 }
 
-const postDataToBitcoinTax = async(receivedArr) => {
-    try {
-
-    } catch(err) {
-        console.log(err)
-    }
-}
-
-
 async function apiCallWithRetry(type, objParam) {
     function wait (timeout) {
         return new Promise((resolve) => {
@@ -184,8 +175,8 @@ async function apiCallWithRetry(type, objParam) {
                     },
                     json: true
                 }
-                debugger;
                 await axios(options)
+                return
             }
         } catch (err) {
             const timeout = Math.pow(2, i)
