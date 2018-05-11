@@ -48,7 +48,7 @@ There are a number of options available to the user. The first two are required,
 -H, --host: the host where your factom walletd instance is operating given in a url format (defaults to http://localhost:8089/v2)
 -p, --path: path to output CSV to an additional location (note: account.js will always save the master copy of the CSV to the local folder)
 -k, --key: your bitcoin.tax API key
--s, --secret: your bitcoin.tax API secret
+-S, --secret: your bitcoin.tax API secret
 -t, --type: your bitcoin.tax transaction type (defaults to 'income' - check the bitcoin.tax [API documentation](https://bitcoin.tax/api) for more options)
 ```
 
