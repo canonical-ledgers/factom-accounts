@@ -94,7 +94,7 @@ const checkForNewTx = async(previouslyRecordedTransactions) => {
 
         receivedArr.reverse()
         if (receivedArr[0] !== undefined) {
-            console.log(`Found new transaction(s): \n${JSON.stringify(receivedArr)}`
+            console.log(`Found new transaction(s): \n${JSON.stringify(receivedArr)}`)
         }
 
         for (let i = 0; i < receivedArr.length; i++) {
