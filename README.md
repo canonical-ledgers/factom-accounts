@@ -28,7 +28,7 @@ brew install node
 
 ## Installing Factom AccountsJS
 
-Clone the repo into your target directory. Then, navigate into project folder and type:
+Clone the repo into your target directory. Then, navigate into the project folder and type:
 
 ```
 npm install
@@ -49,7 +49,7 @@ There are a number of options available to the user. The first two are required,
 -p, --path: path to output CSV to an additional location (note: account.js will always save the master copy of the CSV to the local folder)
 -k, --key: your bitcoin.tax API key
 -S, --secret: your bitcoin.tax API secret
--t, --type: your bitcoin.tax transaction type (defaults to 'income' - check the bitcoin.tax [API documentation](https://bitcoin.tax/api) for more options)
+-t, --type: your bitcoin.tax transaction type (defaults to 'income' - check the bitcoin.tax API documentation for more options)
 ```
 
 First, make sure factomd and walletd are running on your target host. Then, appending your preferred options, run:
