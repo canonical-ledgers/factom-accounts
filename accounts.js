@@ -5,7 +5,6 @@ const csv = require('csvtojson')
 const yargs = require('yargs')
 
 const { FactomCli } = require('factom')
-const cli = new FactomCli()
 
 const argv = yargs
     .options({
@@ -32,7 +31,7 @@ const argv = yargs
         host: {
             demand: false,
             alias: 'H',
-            describe: 'Define the IP and port of your walletd host using a url format (e.g. http://localhost:8089/v2). If left blank, defaults to port 8089 on localhost'
+            describe: 'Define the IP and port of your walletd host using a host:port format (e.g. localhost:8089). If left blank, defaults to port 8089 on localhost'
         },
         path: {
             demand: false,
@@ -60,7 +59,23 @@ const argv = yargs
     .alias('help', 'h')
     .argv;
 
-console.log('Started...')
+if (argv.host === undefined) {
+    var host = localhost,
+        port = 8089
+} else {
+    let splitHost = argv.host.split(":")
+    var host = splitHost[0],
+        port = splitHost[1]
+}
+
+const cli = new FactomCli({
+    walletd: {
+        host,
+        port
+    }
+})
+
+console.log('Checking for new transactions at one minute intervals...')
 
 async function checkForNewTx(currentCsvState) {
     try {
@@ -82,7 +97,7 @@ async function checkForNewTx(currentCsvState) {
                             .filter(output => output.address === argv.address)
                             .map(output => output.amount * Math.pow(10, -8))
                             .reduce((sum, current) => sum + current, 0),
-                        txType: transaction.inputs[0].amount !== 0 ? 'non-Coinbase' : 'Coinbase',
+                        txType: transaction.inputs[0].amount !== 0 ? 'Non-Coinbase' : 'Coinbase',
                         btcExchange: argv.btcex === undefined ? 'CryptoCompare Aggregate' : argv.btcex,
                         fiatExchange: argv.fiatex === undefined ? 'CryptoCompare Aggregate' : argv.fiatex,
                         fiatPrice,
@@ -103,10 +118,13 @@ async function checkForNewTx(currentCsvState) {
                     fs.appendFileSync(`${argv.path}/transaction-history.csv`, csvData)
                 }
             }
+            console.log('Written new transaction(s) to csv')
 
             if (argv.key !== undefined) {
                 await apiCallWithRetry('postBitcoinTax', receivedArr)
+                console.log('Posted new transaction(s) to bitcoin.tax')
             }
+            console.log('Waiting for new transactions...')
         }
     } catch(err) {
         clearInterval(checkTransactionInterval)
