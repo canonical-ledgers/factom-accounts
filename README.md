@@ -45,8 +45,9 @@ There are a number of options available to the user. The first two are required,
 -c, --currency: the target fiat currency you are using to account in [required]
 -b, --btcex: the exchange you wish to use to get the price of FCT in BTC (defaults to CryptoCompare Current Aggregate)
 -f, --fiatex: the exchange you wish to use to get the price of BTC in your target currency (defaults to CryptoCompare Current Aggregate)
--H, --host: the host where your factom walletd instance is operating given in a url format (defaults to http://localhost:8089/v2)
--p, --path: path to output CSV to an additional location (note: account.js will always save the master copy of the CSV to the local folder)
+-H, --host: the IP address of your walletd host (default localhost)
+-p, --port: the port of your walletd host (default 8089)
+-f, --file: path to output CSV to an additional location (note: account.js will always save the master copy of the CSV to the local folder)
 -k, --key: your bitcoin.tax API key
 -S, --secret: your bitcoin.tax API secret
 -t, --type: your bitcoin.tax transaction type (defaults to 'income' - check the bitcoin.tax API documentation for more options)
@@ -61,7 +62,7 @@ node accounts.js
 An example command might be:
 
 ```
-node accounts.js -a FA21YvXDFPbpFffbSCc7pyV2ie6cgCazacqkBnJJxtwEJvkC39ux -c EUR -b poloniex -p ~
+node accounts.js -a FA21YvXDFPbpFffbSCc7pyV2ie6cgCazacqkBnJJxtwEJvkC39ux -c EUR -b poloniex -f ~
 ```
 
 A snippet of the expected output to ~/transaction-history.csv would be:
