@@ -25,7 +25,7 @@ const argv = yargs
         },
         fiatex: {
             demand: false,
-            alias: 'f',
+            alias: 'x',
             describe: 'The exchange you wish to use to get the price of BTC in your chosen currency. Defaults to Cryptocompare Current Aggregate'
         },
         host: {
@@ -76,10 +76,10 @@ console.log('Checking for new transactions at one minute intervals...');
 
 async function checkForNewTx(currentCsvState) {
     try {
-        const tx = await cli.walletdApi('transactions', {address: argv.address});
+        const { transactions } = await cli.walletdApi('transactions', {address: argv.address});
         const receivedArr = [];
 
-        for (const transaction of tx.transactions) {
+        for (const transaction of transactions) {
             if (transaction.outputs
             && transaction.outputs.some(el => el.address === argv.address)
             && receivedArr.every((el) => el.txid !== transaction.txid)

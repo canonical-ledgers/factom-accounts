@@ -44,7 +44,7 @@ There are a number of options available to the user. The first two are required,
 -a, --address: the address you wish to monitor for incoming transactions [required]
 -c, --currency: the target fiat currency you are using to account in [required]
 -b, --btcex: the exchange you wish to use to get the price of FCT in BTC (defaults to CryptoCompare Current Aggregate)
--f, --fiatex: the exchange you wish to use to get the price of BTC in your target currency (defaults to CryptoCompare Current Aggregate)
+-x, --fiatex: the exchange you wish to use to get the price of BTC in your target currency (defaults to CryptoCompare Current Aggregate)
 -H, --host: the IP address of your walletd host (default localhost)
 -p, --port: the port of your walletd host (default 8089)
 -f, --file: path to output CSV to an additional location (note: account.js will always save the master copy of the CSV to the local folder)
