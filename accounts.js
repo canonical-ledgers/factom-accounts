@@ -72,7 +72,8 @@ const cli = new FactomCli({
     }
 });
 
-console.log('Checking for new transactions at one minute intervals...');
+console.log('Checking for new transactions...');
+
 
 async function checkForNewTx(currentCsvState) {
     try {
@@ -99,7 +100,7 @@ async function checkForNewTx(currentCsvState) {
                         btcExchange: argv.btcex === undefined ? 'CryptoCompare Aggregate' : argv.btcex,
                         fiatExchange: argv.fiatex === undefined ? 'CryptoCompare Aggregate' : argv.fiatex,
                         fiatPrice,
-                        get fiatValue() { return this.fctReceived * fiatPrice },
+                        get fiatValue() { return this.fctReceived * fiatPrice; },
                         currency: argv.currency.toUpperCase()
                     });
                 }
@@ -125,9 +126,7 @@ async function checkForNewTx(currentCsvState) {
             console.log('Waiting for new transactions...');
         }
     } catch(err) {
-        clearInterval(checkTransactionInterval);
-        console.warn('Transaction history may be inaccurate or incomplete...');
-        console.error(err);
+        throw new Error(`Transaction history may be inaccurate or incomplete... \n ${err}`);
     }
 }
 
@@ -179,26 +178,27 @@ async function apiCallWithRetry(type, objParam) {
             const timeout = Math.pow(2, i);
             await wait(timeout);
             if (i === 10) {
-                clearInterval(checkTransactionInterval);
                 if (err.hostname === 'min-api.cryptocompare.com') {
-                    return console.error(`Error: failed to connect to ${err.hostname}`);
+                    throw new Error(`failed to connect to ${err.hostname}... \n ${err}`);
                 } else if (err.config.url === 'https://api.bitcoin.tax/v1/transactions') {
-                    return console.error('Error: failed to connect to bitcoin.tax. Remove above transaction(s) from master CSV before restarting accounts.js');
+                    throw new Error(`failed to connect to bitcoin.tax. Remove above transaction(s) from master CSV before restarting accounts.js \n ${err}`);
+                } else {
+                    throw new Error(`Transaction history may be inaccurate or incomplete... \n ${err}`);
                 }
             }
         }
     }
 }
 
-// function test() {
-const checkTransactionInterval = setInterval(async () => {
+async function getFileState() {
     const currentFileState = [];
     if (fs.existsSync('./transaction-history.csv')) {
         const csvFilePath = './transaction-history.csv';
         csv()
             .fromFile(csvFilePath)
             .on('json', csvRow => currentFileState.push(csvRow))
-            .on('done', () => checkForNewTx(currentFileState));
+            .on('done', () => currentFileState);
+        return currentFileState;
     } else {
         console.log('Initialising new CSV');
         const csvInit = 'date, address, txid, fctReceived, txType, btcExchange, fiatExchange, fiatPrice, fiatValue, currency\n';
@@ -206,9 +206,30 @@ const checkTransactionInterval = setInterval(async () => {
         if (argv.path !== undefined) {
             fs.writeFileSync(`${argv.path}/transaction-history.csv`, csvInit);
         }
-        checkForNewTx(currentFileState);
+        return currentFileState;
     }
-}, 60000);
-// }
+}
 
-// test();
+function getTransactionsLoop() {
+    setTimeout(async () => {
+        try {
+            const currentFileState = await getFileState();
+            await checkForNewTx(currentFileState);
+            return getTransactionsLoop();
+        } catch(err) {
+            console.log(err);
+        }
+    }, 300000);
+}
+
+async function getTransactionsOnBoot() {
+    try {
+        const currentFileState = await getFileState();
+        await checkForNewTx(currentFileState);
+        return getTransactionsLoop();
+    } catch(err) {
+        console.log(err);
+    }
+}
+
+getTransactionsOnBoot();
