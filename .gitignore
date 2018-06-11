@@ -3,6 +3,3 @@ package-lock.json
 .DS_Store
 node_modules
 bitcoin-tax-*.json
-config.json
-privatekey.pem
-publickey.cer
