@@ -2,7 +2,16 @@
 
 This tool is built for Factom authority node operators and grant recipients to enable them to record the value of their payouts in a fiat currency of their choice. It achieves this by watching a specified address on the Factom blockchain, then outputting a CSV with transaction and price data. It can also be connected to the bitcoin.tax API to post transaction data directly into your bitcoin.tax account.
 
-The tool is intended to be left operating so it can check for new transactions at intervals of one minute. However, it is also capable of filling in historic price data for all transactions received at an address. For transactions less than one week old, it is able to fetch historical price data per minute. Transactions older than one week can only be matched to hourly price data.
+The tool is intended to be left operating so it can check for new transactions at intervals of five minutes. However, it is also capable of filling in historic price data for all transactions received at an address. For transactions less than one week old, it is able to fetch historical price data per minute. Transactions older than one week can only be matched to hourly price data, and are therefore naturally less accurate.
+
+This is an example of the CSV the script outputs:
+
+```
+date, address, txid, fctReceived, txType, btcExchange, fiatExchange, fiatPrice, fiatValue, currency
+2017-02-11, FA21YvXDFPbpFffbSCc7pyV2ie6cgCazacqkBnJJxtwEJvkC39ux, a4992bdddfcd1443c87fe8f0a88e6573c09e3988a60c4df68f8968d6148b79ff, 2, General, poloniex, CryptoCompare Aggregate, 3.100662140625, 6.20132428125, EUR
+2017-02-14, FA21YvXDFPbpFffbSCc7pyV2ie6cgCazacqkBnJJxtwEJvkC39ux, 18bf01b46595a616909bf6eddad761d0cb7d51d16fc0ac4379c060086b4f3923, 600, General, poloniex, CryptoCompare Aggregate, 3.098235870625, 1858.941522375, EUR
+2017-02-16, FA21YvXDFPbpFffbSCc7pyV2ie6cgCazacqkBnJJxtwEJvkC39ux, 216b07ca7422e5f89834e9443f705f257d3e4411bbd88460f6625ca229a528b6, 560, General, poloniex, CryptoCompare Aggregate, 3.20532521375, 1794.9821197, EUR
+```
 
 
 ## Installing NodeJS
@@ -34,7 +43,16 @@ Clone the repo into your target directory. Then, navigate into the project folde
 npm install
 ```
 
-Factom AccountsJS is now installed and ready to run.
+## Installing PM2 (optional but recommended)
+
+Whilst Factom AccountsJS can effectively backfill transaction data, it is most effective when it is left to run in perpetuity. To achieve that, we will be using PM2. To install, type:
+
+```
+npm install pm2@latest -g
+```
+(Note: You need to run the above command with root permissions)
+
+Factom AccountsJS is now ready to run.
 
 ## Running
 
@@ -53,10 +71,12 @@ There are a number of options available to the user. The first two are required,
 -t, --type: your bitcoin.tax transaction type (defaults to 'income' - check the bitcoin.tax API documentation for more options)
 ```
 
+### Without PM2
+
 First, make sure factomd and walletd are running on your target host. Then, appending your preferred options, run:
 
 ```
-node accounts.js
+node accounts.js [options]
 ```
 
 An example command might be:
@@ -65,17 +85,33 @@ An example command might be:
 node accounts.js -a FA21YvXDFPbpFffbSCc7pyV2ie6cgCazacqkBnJJxtwEJvkC39ux -c EUR -b poloniex -f ~
 ```
 
-A snippet of the expected output to ~/transaction-history.csv would be:
+### With PM2
+
+If you are monitoring a remote host, make sure factomd and walletd are running on that host. If you are running factomd and wallet on the localhost and do not already have a factomd and walletd running as services on boot, you should start them in PM2:
 
 ```
-date, address, txid, fctReceived, txType, btcExchange, fiatExchange, fiatPrice, fiatValue, currency
-2017-02-11, FA21YvXDFPbpFffbSCc7pyV2ie6cgCazacqkBnJJxtwEJvkC39ux, a4992bdddfcd1443c87fe8f0a88e6573c09e3988a60c4df68f8968d6148b79ff, 2, General, poloniex, CryptoCompare Aggregate, 3.100662140625, 6.20132428125, EUR
-2017-02-14, FA21YvXDFPbpFffbSCc7pyV2ie6cgCazacqkBnJJxtwEJvkC39ux, 18bf01b46595a616909bf6eddad761d0cb7d51d16fc0ac4379c060086b4f3923, 600, General, poloniex, CryptoCompare Aggregate, 3.098235870625, 1858.941522375, EUR
-2017-02-16, FA21YvXDFPbpFffbSCc7pyV2ie6cgCazacqkBnJJxtwEJvkC39ux, 216b07ca7422e5f89834e9443f705f257d3e4411bbd88460f6625ca229a528b6, 560, General, poloniex, CryptoCompare Aggregate, 3.20532521375, 1794.9821197, EUR
-
+pm2 start factomd && pm2 start factom-walletd
 ```
 
-## Important Notes on Use and Price Data
+Then, start Factom AccountsJS using the following command:
+
+```
+pm2 start accounts.js -- [options]
+```
+
+An example start command might be:
+
+```
+pm2 start accounts.js -- -a FA21YvXDFPbpFffbSCc7pyV2ie6cgCazacqkBnJJxtwEJvkC39ux -c EUR -b poloniex -f ~
+```
+
+Finally, to make sure the script, factomd and walletd always start together on boot, run:
+
+```
+pm2 startup
+```
+
+## Important Notes on Use and Price Data (please read)
 
 ### Master csv
 
@@ -93,7 +129,7 @@ The result is that the price can sometimes vary dramatically between the two agg
 
 To give you as much control as possible over prices, we have included the -b and -f options, which will allow you to specify which CryptoCompare exchanges to use for both the price of FCT in BTC, and the price of BTC in your target fiat currency. Available exchanges can be found on [CryptoCompare.com](https://www.cryptocompare.com/). If you do not include these options, the price will default to CryptoCompare's aggregate of all listed exchanges.
 
-Finally, accounts.js does have the ability to get prices in any fiat currency where CryptoCompare reports a market in BTC. However, unless your chosen currency has a reasonably large volume of trade, it may not necessarily be wise to exploit that feature. For example, CryptocCompare report that Norwegian Krone (NOK) only trades on LocalBitcoins.com, which is notoriously expensive. Realistically, people accounting against NOK could sell their wares on Bitstamp then convert EUR into NOK at a much better rate. Therefore, they may achieve greater price precision by using account.js with EUR and converting to NOK manually at the last step.
+Finally, accounts.js does have the ability to get prices in any fiat currency where CryptoCompare reports a market in BTC. However, unless your chosen currency has a reasonably large volume of trade, it may not necessarily be wise to exploit that feature. For example, CryptoCompare report that Norwegian Krone (NOK) only trades on LocalBitcoins.com, which is notoriously expensive. Realistically, people accounting against NOK would sell their wares on Bitstamp then convert EUR into NOK at a much better rate. Therefore, they may achieve greater price precision by using account.js with EUR and converting to NOK manually at the last step.
 
 ## Authors
 
