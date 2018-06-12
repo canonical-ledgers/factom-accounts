@@ -87,7 +87,7 @@ node accounts.js -a FA21YvXDFPbpFffbSCc7pyV2ie6cgCazacqkBnJJxtwEJvkC39ux -c EUR 
 
 ### With PM2
 
-If you are monitoring a remote host, make sure factomd and walletd are running on that host. If you are running factomd and wallet on the localhost and do not already have a factomd and walletd running as services on boot, you should start them in PM2:
+If you are monitoring a remote host, make sure factomd and walletd are running on that host. If you are running factomd and walletd on the localhost and do not already have a factomd and walletd running as services on boot, you should start them in PM2:
 
 ```
 pm2 start factomd && pm2 start factom-walletd
@@ -105,11 +105,19 @@ An example start command might be:
 pm2 start accounts.js -- -a FA21YvXDFPbpFffbSCc7pyV2ie6cgCazacqkBnJJxtwEJvkC39ux -c EUR -b poloniex -f ~
 ```
 
+Next, save the current process list:
+
+```
+pm2 save
+```
+
 Finally, to make sure the script, factomd and walletd always start together on boot, run:
 
 ```
 pm2 startup
 ```
+
+then follow the onscreen instructions.
 
 ## Important Notes on Use and Price Data (please read)
 
