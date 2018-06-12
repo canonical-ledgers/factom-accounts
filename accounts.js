@@ -210,26 +210,16 @@ async function getFileState() {
     }
 }
 
-function getTransactionsLoop() {
+async function getTransactions(x) {
     setTimeout(async () => {
         try {
             const currentFileState = await getFileState();
             await checkForNewTx(currentFileState);
-            return getTransactionsLoop();
+            return getTransactions(300000);
         } catch(err) {
             console.log(err);
         }
-    }, 300000);
+    }, x);
 }
 
-async function getTransactionsOnBoot() {
-    try {
-        const currentFileState = await getFileState();
-        await checkForNewTx(currentFileState);
-        return getTransactionsLoop();
-    } catch(err) {
-        console.log(err);
-    }
-}
-
-getTransactionsOnBoot();
+getTransactions(0);
