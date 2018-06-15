@@ -222,4 +222,4 @@ async function getTransactions(x) {
     }, x);
 }
 
-getTransactions(0);
+getTransactions(25000);
