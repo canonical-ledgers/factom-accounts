@@ -114,7 +114,7 @@ async function checkForNewTx(currentCsvState) {
             await handleNewTransactions(receivedArr);
         }
     } catch(err) {
-        throw new Error(`Transaction history may be inaccurate or incomplete... \n ${err}`);
+        throw new Error(err);
     }
 }
 
@@ -135,7 +135,7 @@ async function handleNewTransactions(receivedTransactions) {
         }
         console.log('Waiting for new transactions...');
     } catch(err) {
-        throw new Error(`Transaction history may be inaccurate or incomplete... \n ${err}`);
+        throw new Error(`Check transaction history for potential errors or inconcistency... \n ${err}`);
     }
 }
 
@@ -192,7 +192,7 @@ async function bitcoinTaxApi(transactionData) {
             const timeout = Math.pow(2, i);
             await wait(timeout);
             if (i === 10) {
-                throw new Error(`failed to connect to bitcoin.tax. Remove above transaction(s) from master CSV before restarting accounts.js \n ${err}`);
+                throw new Error(`failed to connect to bitcoin.tax. If above transactions are missing from bitcoin.tax, remove from master CSV then restart script \n ${err}`);
             }
         }
     }
