@@ -21,12 +21,14 @@ const argv = yargs
         btcex: {
             demand: false,
             alias: 'b',
-            describe: 'The exchange you wish to use to get the price of FCT in BTC. Defaults to Cryptocompare Current Aggregate'
+            describe: 'The exchange you wish to use to get the price of FCT in BTC. Defaults to Cryptocompare Current Aggregate',
+            default: 'CCCAGG'
         },
         fiatex: {
             demand: false,
             alias: 'x',
-            describe: 'The exchange you wish to use to get the price of BTC in your chosen currency. Defaults to Cryptocompare Current Aggregate'
+            describe: 'The exchange you wish to use to get the price of BTC in your chosen currency. Defaults to Cryptocompare Current Aggregate',
+            default: 'CCCAGG'
         },
         host: {
             demand: false,
@@ -58,7 +60,8 @@ const argv = yargs
         type: {
             demand: false,
             alias: 't',
-            describe: 'You bitcoin.tax transaction type. Defaults to `income`. See the bitcoin.tax API docs for details'
+            describe: 'You bitcoin.tax transaction type. Defaults to `income`. See the bitcoin.tax API docs for details',
+            default: 'Income'
         },
     })
     .help()
@@ -72,8 +75,7 @@ const cli = new FactomCli({
     }
 });
 
-console.log('Checking for new transactions...');
-
+console.log('Waiting for new transactions...');
 
 async function checkForNewTx(currentCsvState) {
     try {
@@ -86,7 +88,7 @@ async function checkForNewTx(currentCsvState) {
             && receivedArr.every((el) => el.txid !== transaction.txid)
             && currentCsvState.every((el) => el.txid !== transaction.txid)) {
                 const apiHistoryPeriod = Date.now() - transaction.timestamp * 1000 > 600000000 ? 'hour' : 'minute';
-                const fiatPrice = await apiCallWithRetry(apiHistoryPeriod, transaction.timestamp);
+                const fiatPrice = await cryptoCompareApi(apiHistoryPeriod, transaction.timestamp);
                 if (fiatPrice !== undefined) { //prevents api error writing false values to logs
                     receivedArr.unshift({
                         date: new Date(transaction.timestamp * 1000).toISOString(),
@@ -109,85 +111,95 @@ async function checkForNewTx(currentCsvState) {
 
         if (receivedArr[0] !== undefined) {
             console.log(`Found new transaction(s): \n${JSON.stringify(receivedArr, undefined, 2)}`);
-
-            for (const item of receivedArr) {
-                const csvData = `${item.date.slice(0, 10)}, ${argv.address}, ${item.txid}, ${item.fctReceived}, ${item.txType}, ${item.btcExchange}, ${item.fiatExchange}, ${item.fiatPrice}, ${item.fiatValue}, ${item.currency}\n`;
-                fs.appendFileSync('transaction-history.csv', csvData);
-                if (argv.path !== undefined) {
-                    fs.appendFileSync(`${argv.path}/transaction-history.csv`, csvData);
-                }
-            }
-            console.log('Written new transaction(s) to csv');
-
-            if (argv.key !== undefined) {
-                await apiCallWithRetry('postBitcoinTax', receivedArr);
-                console.log('Posted new transaction(s) to bitcoin.tax');
-            }
-            console.log('Waiting for new transactions...');
+            await handleNewTransactions(receivedArr);
         }
     } catch(err) {
         throw new Error(`Transaction history may be inaccurate or incomplete... \n ${err}`);
     }
 }
 
-async function apiCallWithRetry(type, objParam) {
-    function wait (timeout) {
-        return new Promise(resolve => setTimeout(() => resolve(), timeout));
-    }
-
-    for (let i = 0; i <= 10; i++) {
-        try {
-            if (type === 'hour' || type === 'minute') {
-                const exchangeBtc = argv.btcex === undefined ? 'CCCAGG' : argv.btcex;
-                const exchangeFiat =  argv.fiatex === undefined ? 'CCCAGG' : argv.fiatex;
-                const histBtc = await axios.get(`https://min-api.cryptocompare.com/data/histo${type}?fsym=FCT&tsym=BTC&limit=0&aggregate=1&toTs=${objParam}&e=${exchangeBtc}`);
-                const histFiat = await axios.get(`https://min-api.cryptocompare.com/data/histo${type}?fsym=BTC&tsym=${argv.currency}&limit=0&aggregate=1&toTs=${objParam}&e=${exchangeFiat}`);
-                const avgBtcPrice = (histBtc.data.Data[1].high + histBtc.data.Data[1].low + histBtc.data.Data[1].open + histBtc.data.Data[1].close) / 4;
-                const avgFiatPrice = (histFiat.data.Data[1].high + histFiat.data.Data[1].low + histFiat.data.Data[1].open + histFiat.data.Data[1].close) / 4;
-                const priceEstimate = avgFiatPrice * avgBtcPrice;
-                return priceEstimate;
-            } else if (type === 'postBitcoinTax') {
-                const bitcoinTaxArr = [];
-                objParam.forEach(item => {
-                    bitcoinTaxArr.push({
-                        date: item.date,
-                        action: argv.type === undefined ? 'Income' : argv.type,
-                        symbol: 'FCT',
-                        currency: `${argv.currency}`,
-                        volume: item.fctReceived,
-                        price: item.fiatPrice,
-                        txhash: item.txid,
-                        recipient: argv.address
-                    });
-                });
-
-                const options = {
-                    method: 'POST',
-                    url: 'https://api.bitcoin.tax/v1/transactions',
-                    data: bitcoinTaxArr,
-                    headers: {
-                        'User-Agent': 'axios/0.18.0',
-                        'X-APIKEY': `${argv.key}`,
-                        'X-APISECRET': `${argv.secret}`
-                    },
-                    json: true
-                };
-                return await axios(options);
+async function handleNewTransactions(receivedTransactions) {
+    try {
+        for (const item of receivedTransactions) {
+            const csvData = `${item.date.slice(0, 10)}, ${argv.address}, ${item.txid}, ${item.fctReceived}, ${item.txType}, ${item.btcExchange}, ${item.fiatExchange}, ${item.fiatPrice}, ${item.fiatValue}, ${item.currency}\n`;
+            fs.appendFileSync('transaction-history.csv', csvData);
+            if (argv.path !== undefined) {
+                fs.appendFileSync(`${argv.path}/transaction-history.csv`, csvData);
             }
-        } catch (err) {
+        }
+        console.log('Written new transaction(s) to csv');
+
+        if (argv.key !== undefined) {
+            await bitcoinTaxApi(receivedTransactions);
+            console.log('Posted new transaction(s) to bitcoin.tax');
+        }
+        console.log('Waiting for new transactions...');
+    } catch(err) {
+        throw new Error(`Transaction history may be inaccurate or incomplete... \n ${err}`);
+    }
+}
+
+async function cryptoCompareApi(history, timestamp) {
+    for (let i = 0; i < 10; i++) {
+        try {
+            const exchangeBtc = argv.btcex;
+            const exchangeFiat =  argv.fiatex;
+            const histBtc = await axios.get(`https://min-api.cryptocompare.com/data/histo${history}?fsym=FCT&tsym=BTC&limit=0&aggregate=1&toTs=${timestamp}&e=${exchangeBtc}`);
+            const histFiat = await axios.get(`https://min-api.cryptocompare.com/data/histo${history}?fsym=BTC&tsym=${argv.currency}&limit=0&aggregate=1&toTs=${timestamp}&e=${exchangeFiat}`);
+            const avgBtcPrice = (histBtc.data.Data[1].high + histBtc.data.Data[1].low + histBtc.data.Data[1].open + histBtc.data.Data[1].close) / 4;
+            const avgFiatPrice = (histFiat.data.Data[1].high + histFiat.data.Data[1].low + histFiat.data.Data[1].open + histFiat.data.Data[1].close) / 4;
+            return avgFiatPrice * avgBtcPrice;
+        } catch(err) {
             const timeout = Math.pow(2, i);
             await wait(timeout);
             if (i === 10) {
-                if (err.hostname === 'min-api.cryptocompare.com') {
-                    throw new Error(`failed to connect to ${err.hostname}... \n ${err}`);
-                } else if (err.config.url === 'https://api.bitcoin.tax/v1/transactions') {
-                    throw new Error(`failed to connect to bitcoin.tax. Remove above transaction(s) from master CSV before restarting accounts.js \n ${err}`);
-                } else {
-                    throw new Error(`Transaction history may be inaccurate or incomplete... \n ${err}`);
-                }
+                throw new Error(`failed to connect to ${err.hostname}... \n ${err}`);
             }
         }
     }
+}
+
+async function bitcoinTaxApi(transactionData) {
+    for (let i = 0; i < 10; i++) {
+        try {
+            const bitcoinTaxArr = [];
+            transactionData.forEach(item => {
+                bitcoinTaxArr.push({
+                    date: item.date,
+                    action: argv.type,
+                    symbol: 'FCT',
+                    currency: `${argv.currency}`,
+                    volume: item.fctReceived,
+                    price: item.fiatPrice,
+                    txhash: item.txid,
+                    recipient: argv.address
+                });
+            });
+
+            const options = {
+                method: 'POST',
+                url: 'https://api.bitcoin.tax/v1/transactions',
+                data: bitcoinTaxArr,
+                headers: {
+                    'User-Agent': 'axios/0.18.0',
+                    'X-APIKEY': `${argv.key}`,
+                    'X-APISECRET': `${argv.secret}`
+                },
+                json: true
+            };
+            return await axios(options);
+        } catch(err) {
+            const timeout = Math.pow(2, i);
+            await wait(timeout);
+            if (i === 10) {
+                throw new Error(`failed to connect to bitcoin.tax. Remove above transaction(s) from master CSV before restarting accounts.js \n ${err}`);
+            }
+        }
+    }
+}
+
+function wait(timeout) {
+    return new Promise(resolve => setTimeout(() => resolve(), timeout));
 }
 
 async function getFileState() {
@@ -222,4 +234,13 @@ async function getTransactions(x) {
     }, x);
 }
 
+// test();
 getTransactions(25000);
+
+// async function test() {
+//     try {
+//         fs.unlinkSync('./transaction-history.csv');
+//     } catch (err) {
+//         console.log('No file to delete');
+//     }
+// }
