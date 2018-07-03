@@ -80,17 +80,19 @@ console.log('Waiting for new transactions...');
 async function checkForNewTx(currentCsvState) {
     try {
         const { transactions } = await cli.walletdApi('transactions', {address: argv.address});
-        const receivedArr = [];
+        const newTransactionIds = new Set();
+        const newTransactions = [];
 
         for (const transaction of transactions) {
             if (transaction.outputs
-            && transaction.outputs.some(el => el.address === argv.address)
-            && receivedArr.every((el) => el.txid !== transaction.txid)
-            && currentCsvState.every((el) => el.txid !== transaction.txid)) {
+            && !currentCsvState.has(transaction.txid)
+            && !newTransactionIds.has(transaction.txid)
+            && transaction.outputs.some(output => output.address === argv.address)) {
+                newTransactionIds.add(transaction.txid);
                 const apiHistoryPeriod = Date.now() - transaction.timestamp * 1000 > 600000000 ? 'hour' : 'minute';
                 const fiatPrice = await cryptoCompareApi(apiHistoryPeriod, transaction.timestamp);
                 if (fiatPrice !== undefined) { //prevents api error writing false values to logs
-                    receivedArr.unshift({
+                    newTransactions.unshift({
                         date: new Date(transaction.timestamp * 1000).toISOString(),
                         address: argv.address,
                         txid: transaction.txid,
@@ -99,8 +101,8 @@ async function checkForNewTx(currentCsvState) {
                             .map(output => output.amount * Math.pow(10, -8))
                             .reduce((sum, current) => sum + current, 0),
                         txType: transaction.inputs !== null ? 'Non-Coinbase' : 'Coinbase',
-                        btcExchange: argv.btcex === undefined ? 'CryptoCompare Aggregate' : argv.btcex,
-                        fiatExchange: argv.fiatex === undefined ? 'CryptoCompare Aggregate' : argv.fiatex,
+                        btcExchange: argv.btcex,
+                        fiatExchange: argv.fiatex,
                         fiatPrice,
                         get fiatValue() { return this.fctReceived * fiatPrice; },
                         currency: argv.currency.toUpperCase()
@@ -109,9 +111,9 @@ async function checkForNewTx(currentCsvState) {
             }
         }
 
-        if (receivedArr[0] !== undefined) {
-            console.log(`Found new transaction(s): \n${JSON.stringify(receivedArr, undefined, 2)}`);
-            await handleNewTransactions(receivedArr);
+        if (newTransactions[0] !== undefined) {
+            console.log(`Found new transaction(s): \n${JSON.stringify(newTransactions, undefined, 2)}`);
+            await handleNewTransactions(newTransactions);
         }
     } catch(err) {
         throw new Error(err);
@@ -142,10 +144,8 @@ async function handleNewTransactions(receivedTransactions) {
 async function cryptoCompareApi(history, timestamp) {
     for (let i = 0; i < 10; i++) {
         try {
-            const exchangeBtc = argv.btcex;
-            const exchangeFiat =  argv.fiatex;
-            const histBtc = await axios.get(`https://min-api.cryptocompare.com/data/histo${history}?fsym=FCT&tsym=BTC&limit=0&aggregate=1&toTs=${timestamp}&e=${exchangeBtc}`);
-            const histFiat = await axios.get(`https://min-api.cryptocompare.com/data/histo${history}?fsym=BTC&tsym=${argv.currency}&limit=0&aggregate=1&toTs=${timestamp}&e=${exchangeFiat}`);
+            const histBtc = await axios.get(`https://min-api.cryptocompare.com/data/histo${history}?fsym=FCT&tsym=BTC&limit=0&aggregate=1&toTs=${timestamp}&e=${argv.btcex}`);
+            const histFiat = await axios.get(`https://min-api.cryptocompare.com/data/histo${history}?fsym=BTC&tsym=${argv.currency}&limit=0&aggregate=1&toTs=${timestamp}&e=${argv.fiatex}`);
             const avgBtcPrice = (histBtc.data.Data[1].high + histBtc.data.Data[1].low + histBtc.data.Data[1].open + histBtc.data.Data[1].close) / 4;
             const avgFiatPrice = (histFiat.data.Data[1].high + histFiat.data.Data[1].low + histFiat.data.Data[1].open + histFiat.data.Data[1].close) / 4;
             return avgFiatPrice * avgBtcPrice;
@@ -203,13 +203,16 @@ function wait(timeout) {
 }
 
 async function getFileState() {
-    const currentFileState = [];
+    const currentFileState = new Set();
     if (fs.existsSync('./transaction-history.csv')) {
         const csvFilePath = './transaction-history.csv';
-        csv()
-            .fromFile(csvFilePath)
-            .on('json', csvRow => currentFileState.push(csvRow))
-            .on('done', () => currentFileState);
+        await new Promise((resolve, reject) => {
+            csv()
+                .fromFile(csvFilePath)
+                .on('json', csvRow => currentFileState.add(csvRow.txid))
+                .on('done', () => resolve())
+                .on('error', () => reject());
+        });
         return currentFileState;
     } else {
         console.log('Initialising new CSV');
@@ -234,9 +237,6 @@ async function getTransactions(x) {
     }, x);
 }
 
-// test();
-getTransactions(25000);
-
 // async function test() {
 //     try {
 //         fs.unlinkSync('./transaction-history.csv');
@@ -244,3 +244,6 @@ getTransactions(25000);
 //         console.log('No file to delete');
 //     }
 // }
+
+// test();
+getTransactions(25000);
