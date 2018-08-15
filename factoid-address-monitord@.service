@@ -4,8 +4,9 @@ Description=Monitor transactions for Factoid address %I
 #After=factom-walletd.service
 
 [Service]
+Environment="NODE_PATH=/usr/lib/node_modules/"
 EnvironmentFile=-/etc/default/factoid-address-monitord
-ExecStart=/usr/bin/factoid-address-monitord -a %I $FACTOID_ADDRESS_MONITORD_OPTS
+ExecStart=/usr/bin/factoid-address-monitord --address %I --file /var/db/factoid-address-monitord/%I.csv $FACTOID_ADDRESS_MONITORD_OPTS
 Restart=always
 
 [Install]
