@@ -1,0 +1,12 @@
+[Unit]
+Description=Monitor transactions for Factoid address %I
+#Requires=factom-walletd.service
+#After=factom-walletd.service
+
+[Service]
+EnvironmentFile=-/etc/default/factoid-address-monitord
+ExecStart=/usr/bin/factoid-address-monitord -a %I $FACTOID_ADDRESS_MONITORD_OPTS
+Restart=always
+
+[Install]
+WantedBy=default.target
