@@ -159,7 +159,7 @@ any new transactions that have arrived.
 Editing the master copy of transaction-csv will not work. Instead, it would
 lead to deleted transactions being imported again, and thus duplicates
 occurring in your Excel records or in your bitcoin.tax account. If you want to
-edit the csv file directly, specify a path for a new file using -p. You can
+edit the csv file directly, specify a path for a new file using `-p`. You can
 edit that copy directly without fear of creating duplicate transactions in your
 records.
 
