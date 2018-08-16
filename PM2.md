@@ -1,4 +1,4 @@
-# Running factoid-address-monitord with systemd
+# Running factoid-address-monitord with PM2
 
 ## Installation
 
