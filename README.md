@@ -1,4 +1,5 @@
 # Factoid Address Monitor Daemon
+
 ##### factoid-address-monitord
 
 This tool is built for Factom authority node operators and grant recipients to
@@ -24,7 +25,6 @@ date, address, txid, fctReceived, txType, btcExchange, fiatExchange, fiatPrice, 
 2017-02-16, FA21YvXDFPbpFffbSCc7pyV2ie6cgCazacqkBnJJxtwEJvkC39ux, 216b07ca7422e5f89834e9443f705f257d3e4411bbd88460f6625ca229a528b6, 560, General, poloniex, CryptoCompare Aggregate, 3.20532521375, 1794.9821197, EUR
 ```
 
-
 ## Installing NodeJS
 
 First, install NodeJS on your system.
@@ -47,7 +47,7 @@ Alternatively, if you have Homebrew installed:
 brew install node
 ```
 
-## Installing Factom Address Monitor Daemon
+## Installing Factoid Address Monitor Daemon
 
 Clone the repo into your target directory. Then, navigate into the project
 folder and type:
@@ -55,19 +55,6 @@ folder and type:
 ```
 npm install
 ```
-
-## Installing PM2 (optional but recommended)
-
-Whilst Factom AccountsJS can effectively backfill transaction data, it is most
-effective when it is left to run in perpetuity. To achieve that, we will be
-using PM2. To install, type:
-
-```
-npm install pm2@latest -g
-```
-(Note: You need to run the above command with root permissions)
-
-Factom AccountsJS is now ready to run.
 
 ## Running
 
@@ -80,71 +67,36 @@ required, the rest are not:
 -b, --btcex: the exchange you wish to use to get the price of FCT in BTC (defaults to CryptoCompare Current Aggregate)
 -x, --fiatex: the exchange you wish to use to get the price of BTC in your target currency (defaults to CryptoCompare Current Aggregate)
 -H, --host: the IP address of your walletd host (default localhost)
--p, --port: the port of your walletd host (default 8089)
--f, --file: path to output CSV to an additional location (note: factoid-address-monitord will always save the master copy of the CSV to the local folder)
+-P, --port: the port of your walletd host (default 8089)
+-p, --path: path to output CSV to an additional location (note: factoid-address-monitord will always save the master copy of the CSV to the local folder)
 -k, --key: your bitcoin.tax API key
 -S, --secret: your bitcoin.tax API secret
 -t, --type: your bitcoin.tax transaction type (defaults to 'income' - check the bitcoin.tax API documentation for more options)
 ```
 
-### Without PM2
+### Without PM2 or Systemd
 
 First, make sure factomd and walletd are running on your target host. Then,
 appending your preferred options, run:
 
 ```
-node accounts.js [options]
+node factoid-address-monitord [options]
 ```
 
 An example command might be:
 
 ```
-node accounts.js -a FA21YvXDFPbpFffbSCc7pyV2ie6cgCazacqkBnJJxtwEJvkC39ux -c EUR -b poloniex -f ~
+node factoid-address-monitord -a FA21YvXDFPbpFffbSCc7pyV2ie6cgCazacqkBnJJxtwEJvkC39ux -c EUR -b poloniex -p ~
 ```
 
-#### With systemd
-You can alternatively use the provided systemd service file to have systemd
-manage and run this program for you. See SYSTEMD.md for instructions.
+### With systemd
+
+You can use the provided systemd service file to have systemd
+manage and run this program for you. See [SYSTEMD.md](SYSTEMD.md) for instructions.
 
 ### With PM2
 
-If you are monitoring a remote host, make sure factomd and walletd are running
-on that host. If you are running factomd and walletd on the localhost and do
-not already have a factomd and walletd running as services on boot, you should
-start them in PM2:
-
-```
-pm2 start factomd && pm2 start factom-walletd
-```
-
-Then, start Factom AccountsJS using the following command:
-
-```
-pm2 start accounts.js -- [options]
-```
-
-An example start command might be:
-
-```
-pm2 start accounts.js -- -a FA21YvXDFPbpFffbSCc7pyV2ie6cgCazacqkBnJJxtwEJvkC39ux -c EUR -b poloniex -f ~
-```
-
-Next, save the current process list:
-
-```
-pm2 save
-```
-
-Finally, to make sure the script, factomd and walletd always start together on
-boot, run:
-
-```
-pm2 startup
-```
-
-then follow the onscreen instructions.
-
-
+Finally, you can also use PM2 to manage the daemon. PM2 is a daemon management tool built primarily for Node, but it can also manage other other exectuables (such as Factomd and Walletd). See [PM2.md](PM2.md) for instructions.
 
 ## Important Notes on Use and Price Data (please read)
 
@@ -187,7 +139,7 @@ fiat currency. Available exchanges can be found on
 these options, the price will default to CryptoCompare's aggregate of all
 listed exchanges.
 
-Finally, accounts.js does have the ability to get prices in any fiat currency
+Finally, Factoid Address Monitord does have the ability to get prices in any fiat currency
 where CryptoCompare reports a market in BTC. However, unless your chosen
 currency has a reasonably large volume of trade, it may not necessarily be wise
 to exploit that feature. For example, CryptoCompare report that Norwegian Krone
@@ -199,7 +151,7 @@ converting to NOK manually at the last step.
 
 ## Authors
 
-* **Alex Carrithers for Factoshi**
+-   **Alex Carrithers for Factoshi**
 
 ## License
 
