@@ -29,14 +29,14 @@ date, address, txid, fctReceived, txType, btcExchange, fiatExchange, fiatPrice, 
 
 First, install NodeJS on your system.
 
-### Ubuntu
+#### Ubuntu
 
 ```
 curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
 sudo apt-get install -y nodejs
 ```
 
-### MacOS
+#### MacOS
 
 Visit the NodeJS website to download in the installer package:
 https://nodejs.org/en/#download
@@ -74,7 +74,7 @@ required, the rest are not:
 -t, --type: your bitcoin.tax transaction type (defaults to 'income' - check the bitcoin.tax API documentation for more options)
 ```
 
-### Without PM2 or Systemd
+#### Without PM2 or Systemd
 
 First, make sure factomd and walletd are running on your target host. Then,
 appending your preferred options, run:
@@ -89,18 +89,18 @@ An example command might be:
 node factoid-address-monitord -a FA21YvXDFPbpFffbSCc7pyV2ie6cgCazacqkBnJJxtwEJvkC39ux -c EUR -b poloniex -p ~
 ```
 
-### With systemd
+#### With systemd
 
 You can use the provided systemd service file to have systemd
 manage and run this program for you. See [SYSTEMD.md](SYSTEMD.md) for instructions.
 
-### With PM2
+#### With PM2
 
-Finally, you can also use PM2 to manage the daemon. PM2 is a daemon management tool built primarily for Node, but it can also manage other other exectuables (such as Factomd and Walletd). See [PM2.md](PM2.md) for instructions.
+Finally, you can also use PM2. PM2 is a daemon management tool built primarily for Node, but it can also manage other other exectuables (such as Factomd and Walletd). See [PM2.md](PM2.md) for instructions.
 
 ## Important Notes on Use and Price Data (please read)
 
-### Master csv
+#### Master csv
 
 The master copy of transaction-history.csv lives in the project directory. That
 csv is used to store the current state and to prevent duplicates. Some people
@@ -115,7 +115,7 @@ edit the csv file directly, specify a path for a new file using `-p`. You can
 edit that copy directly without fear of creating duplicate transactions in your
 records.
 
-### Price
+#### Price
 
 There is no definitive price for any cryptocurrency. Instead, cryptocurrencies
 trade on multiple exchanges, which means each exchange has its own price.
@@ -158,7 +158,7 @@ converting to NOK manually at the last step.
 This project is licensed under the MIT License - see the [LICENSE](LICENSE)
 file for details
 
-### Warning
+#### Warning
 
 Use of this software is entirely at your own risk. It is an alpha release and
 is likely to contain bugs. Any data it produces may be inaccurate or
