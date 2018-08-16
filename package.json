@@ -1,8 +1,8 @@
 {
-  "name": "accountsjs",
+  "name": "factoid-address-monitord",
   "version": "1.2.0",
   "description": "",
-  "main": "accounts.js",
+  "main": "factoid-address-monitord",
   "dependencies": {
     "axios": "^0.18.0",
     "csvtojson": "^1.1.9",

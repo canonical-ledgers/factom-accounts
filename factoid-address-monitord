@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const fs = require('fs');
 
 const axios = require('axios');
@@ -38,14 +39,14 @@ const argv = yargs
         },
         port: {
             demand: false,
-            alias: 'p',
+            alias: 'P',
             describe: 'The port to access walletd. Defaults to 8089',
             default: 8089
         },
-        file: {
+        path: {
             demand: false,
-            alias: 'f',
-            describe: 'Path to output CSV to an additional location (note: account.js will always save the master copy of the CSV to the local folder)'
+            alias: 'p',
+            describe: 'Path to output an additional copy of transaction-history.csv (note: factoid-address-monitord will always save the master copy of the CSV to the working directory)'
         },
         key: {
             demand: false,
