@@ -62,16 +62,25 @@ There are a number of options available to the user. The first two are
 required, the rest are not:
 
 ```
--a, --address: the address you wish to monitor for incoming transactions [required]
--c, --currency: the target fiat currency you are using to account in [required]
--b, --btcex: the exchange you wish to use to get the price of FCT in BTC (defaults to CryptoCompare Current Aggregate)
--x, --fiatex: the exchange you wish to use to get the price of BTC in your target currency (defaults to CryptoCompare Current Aggregate)
--H, --host: the IP address of your walletd host (default localhost)
--P, --port: the port of your walletd host (default 8089)
--p, --path: path to output CSV to an additional location (note: factoid-address-monitord will always save the master copy of the CSV to the local folder)
--k, --key: your bitcoin.tax API key
--S, --secret: your bitcoin.tax API secret
--t, --type: your bitcoin.tax transaction type (defaults to 'income' - check the bitcoin.tax API documentation for more options)
+Options:
+  --version       Show version number                                  [boolean]
+  --address, -a   The address you would like to monitor               [required]
+  --currency, -c  The currency you are accounting in, given as three letter code
+                  (e.g. USD, GBP, EUR)                                [required]
+  --btcex, -b     The exchange you wish to use to get the price of FCT in BTC.
+                  Defaults to Cryptocompare Current Aggregate[default: "CCCAGG"]
+  --fiatex, -x    The exchange you wish to use to get the price of BTC in your
+                  chosen currency. Defaults to Cryptocompare Current Aggregate
+                                                             [default: "CCCAGG"]
+  --host, -H      The IP of your walletd host. Defaults to localhost
+                                                          [default: "localhost"]
+  --port, -P      The port to access walletd. Defaults to 8089   [default: 8089]
+  --file, -f      CSV file to output and track transaction history    [required]
+  --key, -k       Your bitcoin.tax key
+  --secret, -S    Your bitcoin.tax secret
+  --type, -t      Your bitcoin.tax transaction type. Defaults to `income`. See
+                  the bitcoin.tax API docs for details       [default: "Income"]
+  --help, -h      Show help                                            [boolean]
 ```
 
 #### Without PM2 or Systemd
@@ -102,18 +111,17 @@ Finally, you can also use PM2. PM2 is a daemon management tool built primarily f
 
 #### Master csv
 
-The master copy of transaction-history.csv lives in the project directory. That
-csv is used to store the current state and to prevent duplicates. Some people
-may want to edit the csv file. For example, they might want to delete all
-transactions they have already exported to Excel so that they can see clearly
-any new transactions that have arrived.
+The CSV pointed to by `--file` is used to store the current state and to
+prevent duplicates. Some people may want to edit the csv file. For example,
+they might want to delete all transactions they have already exported to Excel
+so that they can see clearly any new transactions that have arrived.
 
-Editing the master copy of transaction-csv will not work. Instead, it would
-lead to deleted transactions being imported again, and thus duplicates
-occurring in your Excel records or in your bitcoin.tax account. If you want to
-edit the csv file directly, specify a path for a new file using `-p`. You can
-edit that copy directly without fear of creating duplicate transactions in your
-records.
+If you wish to do this copy the file and edit the copy instead of editing the
+file directly.
+
+Editing the main CSV will not work. Instead, it would lead to deleted
+transactions being imported again, and thus duplicates occurring in your Excel
+records or in your bitcoin.tax account.
 
 #### Price
 

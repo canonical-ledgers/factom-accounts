@@ -46,7 +46,7 @@ const argv = yargs
         file: {
             demand: true,
             alias: 'f',
-            describe: 'CSV file to output transaction history'
+            describe: 'CSV file to output and track transaction history'
         },
         key: {
             demand: false,
