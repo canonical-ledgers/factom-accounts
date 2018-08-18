@@ -124,7 +124,7 @@ async function checkForNewTx(currentCsvState) {
 async function handleNewTransactions(receivedTransactions) {
     try {
         for (const item of receivedTransactions) {
-            const csvData = `${item.date.slice(0, 10)}, ${argv.address}, ${item.txid}, ${item.fctReceived}, ${item.txType}, ${item.btcExchange}, ${item.fiatExchange}, ${item.fiatPrice}, ${item.fiatValue}, ${item.currency}\n`;
+            const csvData = `${item.date.slice(0, 10)},${argv.address},${item.txid},${item.fctReceived},${item.txType},${item.btcExchange},${item.fiatExchange},${item.fiatPrice},${item.fiatValue},${item.currency}\n`;
             fs.appendFileSync(`${argv.file}`, csvData);
         }
         console.log('Written new transaction(s) to csv');
@@ -214,7 +214,7 @@ async function getFileState() {
         return currentFileState;
     } else {
         console.log('Initialising new CSV');
-        const csvInit = 'date, address, txid, fctReceived, txType, btcExchange, fiatExchange, fiatPrice, fiatValue, currency\n';
+        const csvInit='date,address,txid,fctReceived,txType,btcExchange,fiatExchange,fiatPrice,fiatValue,currency\n';
         fs.writeFileSync(`${argv.file}`, csvInit);
         return currentFileState;
     }
